@@ -1,15 +1,20 @@
+#
+# Copyright Matt Holmes https://github.com/mjholmes
+# SPDX-License-Identifier: LGPL-3.0-or-later
+#
+
 from trend import TrendScraper
-from prettytable import PrettyTable  # type: ignore
+from prettytable import PrettyTable
 import requests
 import json
 from dotenv import load_dotenv
 import os
 
 
-def post_to_teams(monkey_url, title, message):
+def post_to_teams(trend_url, title, message):
     headers = {"Content-Type": "application/json"}
     payload = {"title": title, "text": f"```\n{message}\n```"}
-    response = requests.post(monkey_url, headers=headers, data=json.dumps(payload))
+    response = requests.post(trend_url, headers=headers, data=json.dumps(payload))
     if response.status_code == 200:
         print("Message posted successfully")
     else:

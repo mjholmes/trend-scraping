@@ -1,76 +1,101 @@
 # Trend Scraping
 
-This repository contains a Python script `main.py` designed to scrape alarm data from a Trend system and post the results to a Microsoft Teams channel.
+Trend (now Honeywell) IQ building and energy management systems are commonly found managing medium to large buildings. Unfortunatly as with many BEMS installations the systems are rarely setup and integrated in a way that offers a good user experience for building users.
+
+This script is designed to scrape alarm data from an isolated and rather unloved Trend BEMS system and post the results to a Microsoft Teams channel giving remote Estates teams a level of offsite oversight. Ideally XML web services would be used to gather the data rather than web scraping but this was not licensed on the iQ3 on-site and not enabled on the iQ4s.
+
+The script has been tested on an IQ3 XCITE running firmware version 3.07 and on some iQ4 series (iQ422) running firmware version 4.36.
+
 
 ## Overview
 
-The `main.py` script uses the `TrendScraper` class from `trend.py` to collect alarm data from a Trend system. It then formats the data into a table and posts it to a Microsoft Teams channel using a webhook URL.
+The script uses username/password authentication to grab an authentication toekn (`param0`) which is then used to access the main user web interface and scrape the required information using `beautifulsoup`.
 
 ## Usage
 
+I'd typically set this up in a virtual environment and run it periodically from CRON.
+By default the code is setup to run regularly every 4 hours. If you want to change the interval edit `main.py` and include the required interval in the call to `get_recent_alarms`.
+
 1. **Installation**: Ensure you have Python installed on your system. Clone this repository and navigate to the directory.
 
-    ```bash
-    git clone https://github.com/yourusername/trend-scraping.git
-    cd trend-scraping
-    ```
+   ```bash
+   cd /opt
+   sudo git clone https://github.com/mjholmes/trend-scraping.git
+   cd trend-scraping
+   ```
 
-2. **Dependencies**: Install the required dependencies using pip.
+1. **Create a virutal env** to store
 
-    ```bash
-    pip install -r requirements.txt
-    ```
+   ```bash
+   python3 -m venv .
+   source ./bin/activate
+   ```
 
-3. **Environment Variables**: Create a `.env` file in the root directory of the project to store your environment variables. Below is an example:
+1. **Dependencies**: Install the required dependencies using pip.
 
-    ```env
-    IP_ADDRESSES=172.24.7.18,172.24.7.19
-    BMSUSER=your_username
-    BMSPASS=your_password
-    WEBHOOK_URL=your_teams_webhook_url
-    ```
+   ```bash
+   pip3 install -r requirements.txt
+   ```
 
-    Replace the placeholder values with your actual IP addresses, username, password, and Teams webhook URL.
+1. **Environment Variables**: Create a `.env` file in the root directory of the project to store your environment variables. Below is an example:
 
-4. **Running the Script**: Execute the `main.py` script to start scraping alarm data and posting it to Microsoft Teams.
+   ```env
+   IP_ADDRESSES=192.168.0.10,192.168.0.11
+   BMSUSER=your_username
+   BMSPASS=your_password
+   WEBHOOK_URL=your_teams_webhook_url
+   ```
 
-    ```bash
-    python main.py
-    ```
+   Replace the placeholder values with your actual IP addresses, username, password, and Teams webhook URL (in Teams right click on a channel, choose "Manage channel" then "Settings" and add an "incoing webhook" connector).
 
-## Features
+1. **Running the Script**: Execute the `main.py` script to start scraping alarm data and posting it to Microsoft Teams.
 
-- Scrapes alarm data from a Trend system.
-- Formats the data into a table.
-- Posts the formatted data to a Microsoft Teams channel.
+   ```bash
+   python3 main.py
+   ```
 
-## Contributing
+1. **Create a CRON entry** to run the code reguarly. With virtual environments you can choose to call the python interpretter directly from the venv or wrtie a small shell script wrapper `scrape-trend.sh`:
 
-Contributions are welcome! Please fork the repository and submit a pull request with your changes.
+   ```bash
+   #!/bin/bash
+
+   cd /opt/trend-scraping
+
+   source ./bin/activate
+   python3 main.py
+   deactivate
+   ```
+
+   Add the crontab entry:
+   ```bash
+   0	*/4	*	*	*	/opt/trend-scraping/scrape-trend.sh
+   ```
+
 
 ## License
 
-This project is licensed under the MIT License.
-
-## Contact
-
-For any questions or suggestions, please open an issue or contact the repository owner.
+This project is licensed under LGPL 3 or later.
 
 ## Methods
 
 ### `TrendScraper`
 
 #### `create_session()`
+
 Creates a session and logs in to the Trend system.
 
 #### `fetch_alarm_data()`
+
 Fetches the alarm data from the Trend system.
 
 #### `get_recent_alarms(exclude_labels=None)`
+
 Retrieves recent alarms, excluding specified labels.
 
 #### `logout()`
+
 Logs out from the Trend system.
 
 ### `post_to_teams(webhook_url, title, message)`
+
 Posts a message to a Microsoft Teams channel using a webhook URL.

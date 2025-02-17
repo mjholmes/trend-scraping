@@ -1,22 +1,27 @@
+#
+# Copyright Matt Holmes https://github.com/mjholmes
+# SPDX-License-Identifier: LGPL-3.0-or-later
+#
+
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 
 class TrendScraper:
     """
-    A class to scrape alarm data from a Trend system.
+    A class to scrape alarm data from a Trend BEMS controller.
 
     Attributes:
-        ip_address (str): The IP address of the Trend system.
+        ip_address (str): The IP address of the Trend controller.
         username (str): The username for authentication.
         password (str): The password for authentication.
         session (requests.Session): The session object to persist the login.
-        param_value (str): The extracted param0 value from the redirection URL.
+        param_value (str): The extracted param0 value from the redirection URL (used as a session token).
 
     Methods:
         create_session(): Creates a session and logs in to the Trend system.
         fetch_alarm_data(): Fetches the alarm data from the Trend system.
-        get_recent_alarms(exclude_labels=None): Retrieves recent alarms, excluding specified labels.
+        get_recent_alarms(exclude_labels=None, hours=4): Retrieves recent alarms, excluding specified labels.
         logout(): Logs out from the Trend system.
     """
 
@@ -25,7 +30,7 @@ class TrendScraper:
         Initializes the TrendScraper with the given IP address, username, and password.
 
         Args:
-            ip_address (str): The IP address of the Trend system.
+            ip_address (str): The IP address of the Trend controller.
             username (str): The username for authentication.
             password (str): The password for authentication.
         """
@@ -37,7 +42,7 @@ class TrendScraper:
 
     def create_session(self):
         """
-        Creates a session and logs in to the Trend system.
+        Creates a session and logs in to the Trend controller.
 
         Raises:
             requests.RequestException: If the session creation fails.
@@ -119,12 +124,13 @@ class TrendScraper:
             print(f"Failed to fetch alarm data: {e}")
             return []
 
-    def get_recent_alarms(self, exclude_labels=None):
+    def get_recent_alarms(self, exclude_labels=None, hours=4):
         """
         Retrieves recent alarms, excluding specified labels.
 
         Args:
             exclude_labels (list): A list of labels to exclude from the results.
+            hours (int): The number of hours to look back for recent alarms.
 
         Returns:
             list: A list of dictionaries containing the recent alarm data.
@@ -134,11 +140,11 @@ class TrendScraper:
         recent_alarms = []
 
         current_time = datetime.now()
-        six_hours_ago = current_time - timedelta(hours=6)
+        time_period_ago = current_time - timedelta(hours=hours)
 
         for alarm in alarms:
             row_time = datetime.strptime(alarm['Time'], '%b %d %Y %H:%M:%S')
-            if row_time > six_hours_ago and alarm['Module Label'] not in exclude_labels:
+            if row_time > time_period_ago and alarm['Module Label'] not in exclude_labels:
                 recent_alarms.append(alarm)
 
         return recent_alarms
