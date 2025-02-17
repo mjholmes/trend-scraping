@@ -9,7 +9,7 @@ The script has been tested on an IQ3 XCITE running firmware version 3.07 and on 
 
 ## Overview
 
-The script uses username/password authentication to grab an authentication toekn (`param0`) which is then used to access the main user web interface and scrape the required information using `beautifulsoup`.
+The script uses username/password authentication to grab an authentication token (`param0`) which is then used to access the main user web interface and scrape the required information using `beautifulsoup`.
 
 ## Usage
 
@@ -24,7 +24,7 @@ By default the code is setup to run regularly every 4 hours. If you want to chan
    cd trend-scraping
    ```
 
-1. **Create a virutal env** to store
+1. **Create a virutal env** to keep all the dependencies self-contained.
 
    ```bash
    python3 -m venv .
